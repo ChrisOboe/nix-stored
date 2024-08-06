@@ -33,7 +33,9 @@ independend from your Nix Store.
   reverse proxies). 
 - It's written in Go so deployment is easy and performance should be very
   good while preventing potential security issues servers with manually
-  managed memory can have. Also since there are very few
+  managed memory can have. Also since there are very few dependencies, the
+  this of supply chain attacks is rather low.
+  (i'm looking at you node and rust software)
 - It's just a few lines of code. It just hosts nix stuff. It doesn't sign
   packages (which is imho wierd anyways for a server that supports
   uploading since i want the builder to sign the stuff, not the server).
