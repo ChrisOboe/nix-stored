@@ -1,0 +1,14 @@
+# github.com/apapsch/go-jsonmerge/v2 v2.0.0
+## explicit; go 1.12
+github.com/apapsch/go-jsonmerge/v2
+# github.com/go-chi/chi/v5 v5.1.0
+## explicit; go 1.14
+github.com/go-chi/chi/v5
+# github.com/google/uuid v1.5.0
+## explicit
+github.com/google/uuid
+# github.com/oapi-codegen/runtime v1.1.1
+## explicit; go 1.20
+github.com/oapi-codegen/runtime
+github.com/oapi-codegen/runtime/strictmiddleware/nethttp
+github.com/oapi-codegen/runtime/types
