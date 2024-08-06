@@ -14,9 +14,9 @@ deploy in various environments.
 The software can be configured using the following environment variables:
 
 - `NIX_STORED_PATH`:             The path where NAR files are stored. Default
--                                is `/var/lib/nixStored`.
+                                 is `/var/lib/nixStored`.
 - `NIX_STORED_LISTEN_INTERFACE`: The interface and port on which the server
--                                listens. Default is `127.0.0.1:8100`.
+                                 listens. Default is `127.0.0.1:8100`.
 - `NIX_STORED_USER_READ`:        The username for read access. Default is empty.
 - `NIX_STORED_USER_READ_PASS`:   The password for read access. Default is empty.
 - `NIX_STORED_USER_WRITE`:       The username for write access. Default is empty.
