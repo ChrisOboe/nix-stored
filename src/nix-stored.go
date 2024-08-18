@@ -46,6 +46,7 @@ func SettingsFromEnv() (Settings, error) {
 	WriteAuth.User = os.Getenv("NIX_STORED_USER_WRITE")
 
 	if rpassfile != "" {
+		slog.Debug("Reading read user password file", "path", rpassfile)
 		rpass, err := os.ReadFile(rpassfile)
 		if err != nil {
 			return Settings{}, fmt.Errorf("Couldn't read read passfile: %w", err)
@@ -56,6 +57,7 @@ func SettingsFromEnv() (Settings, error) {
 	}
 
 	if wpassfile != "" {
+		slog.Debug("Reading write user password file", "path", wpassfile)
 		wpass, err := os.ReadFile(wpassfile)
 		if err != nil {
 			return Settings{}, fmt.Errorf("Couldn't read read passfile: %w", err)
