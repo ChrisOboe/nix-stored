@@ -35,31 +35,58 @@ func defaultEnv(envVar string, def string) string {
 	return def
 }
 
-func SettingsFromEnv() Settings {
+func SettingsFromEnv() (Settings, error) {
+	rpassfile := os.Getenv("NIX_STORED_USER_READ_PASSFILE")
+	wpassfile := os.Getenv("NIX_STORED_USER_WRITE_PASSFILE")
+
+	var ReadAuth Authentication
+	ReadAuth.User = os.Getenv("NIX_STORED_USER_READ")
+
+	var WriteAuth Authentication
+	WriteAuth.User = os.Getenv("NIX_STORED_USER_WRITE")
+
+	if rpassfile != "" {
+		rpass, err := os.ReadFile(rpassfile)
+		if err != nil {
+			return Settings{}, fmt.Errorf("Couldn't read read passfile: %w", err)
+		}
+		ReadAuth.Pass = string(rpass)
+	} else {
+		ReadAuth.Pass = os.Getenv("NIX_STORED_USER_READ_PASS")
+	}
+
+	if wpassfile != "" {
+		wpass, err := os.ReadFile(wpassfile)
+		if err != nil {
+			return Settings{}, fmt.Errorf("Couldn't read read passfile: %w", err)
+		}
+		WriteAuth.Pass = string(wpass)
+	} else {
+		WriteAuth.Pass = os.Getenv("NIX_STORED_USER_WRITE_PASS")
+	}
+
 	return Settings{
 		StorePath:       defaultEnv("NIX_STORED_PATH", "/var/lib/nixStored"),
 		ListenInterface: defaultEnv("NIX_STORED_LISTEN_INTERFACE", "127.0.0.1:8100"),
-		UserRead: Authentication{
-			User: os.Getenv("NIX_STORED_USER_READ"),
-			Pass: os.Getenv("NIX_STORED_USER_READ_PASS"),
-		},
-		UserWrite: Authentication{
-			User: os.Getenv("NIX_STORED_USER_WRITE"),
-			Pass: os.Getenv("NIX_STORED_USER_WRITE_PASS"),
-		},
-	}
+		UserRead:        ReadAuth,
+		UserWrite:       WriteAuth,
+	}, nil
 }
 
 func main() {
 	consoleHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
 	slog.SetDefault(slog.New(consoleHandler))
 
-	s := SettingsFromEnv()
+	s, err := SettingsFromEnv()
+	if err != nil {
+		slog.Error("Couldn't load settings", "error", err)
+		return
+	}
 	slog.Info("loaded settings", "settings", s)
 
 	ns := NixStored{StorePath: s.StorePath}
 	// create dirs
-	err := os.MkdirAll(s.StorePath+"/nar", 0770)
+	err = os.MkdirAll(s.StorePath+"/nar", 0770)
 	if err != nil {
 		slog.Error("Couldn't create dir", "error", err)
 		return
