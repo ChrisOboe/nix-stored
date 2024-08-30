@@ -148,7 +148,6 @@ func (n NixStored) GetCompressedNar(ctx context.Context, request api.GetCompress
 			return api.GetCompressedNar500Response{}, nil
 		}
 	}
-	defer file.Close()
 	info, err := file.Stat()
 	if err != nil {
 		slog.Error("Couldn't get fileinfo", "file", filename, "error", err)
@@ -225,7 +224,6 @@ func (n NixStored) GetNarInfo(ctx context.Context, request api.GetNarInfoRequest
 			return api.GetNarInfo500Response{}, nil
 		}
 	}
-	defer file.Close()
 	info, err := file.Stat()
 	if err != nil {
 		slog.Error("Couldn't get fileinfo", "file", filename, "error", err)
