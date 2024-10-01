@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -194,13 +193,11 @@ func (n NixStored) PutNarFileHashNarCompression(ctx context.Context, request api
 // Get information about this Nix binary cache
 // (GET /nix-cache-info)
 func (n NixStored) GetNixCacheInfo(ctx context.Context, request api.GetNixCacheInfoRequestObject) (api.GetNixCacheInfoResponseObject, error) {
-	i := api.NixCacheInfo{
+	return api.GetNixCacheInfo200JSONResponse{
 		Priority:      30,
 		StoreDir:      "/nix/store",
 		WantMassQuery: 1,
-	}
-	b, _ := json.Marshal(i)
-	return api.GetNixCacheInfo200TextResponse(b), nil
+	}, nil
 }
 
 // Get the file listings for a particular store-path (once you expand the NAR).

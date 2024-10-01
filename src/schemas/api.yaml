@@ -211,7 +211,7 @@ paths:
             responses:
                 '200':
                     content:
-                        text/plain:
+                        application/json:
                             schema:
                                 $ref: '#/components/schemas/NixCacheInfo'
                     description: successful operation

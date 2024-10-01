@@ -4,7 +4,7 @@ github.com/apapsch/go-jsonmerge/v2
 # github.com/go-chi/chi/v5 v5.1.0
 ## explicit; go 1.14
 github.com/go-chi/chi/v5
-# github.com/google/uuid v1.5.0
+# github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
 # github.com/oapi-codegen/runtime v1.1.1
