@@ -10,15 +10,21 @@
       nixpkgs,
       flake-utils,
     }:
+
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        version = "${builtins.substring 0 4 self.sourceInfo.lastModifiedDate}.${
+          builtins.substring 4 2 self.sourceInfo.lastModifiedDate
+        }.${builtins.substring 6 2 self.sourceInfo.lastModifiedDate}-${
+          self.sourceInfo.shortRev or self.sourceInfo.dirtyShortRev
+        }";
       in
       rec {
         packages = rec {
           default = nix-stored;
-          nix-stored = pkgs.callPackage ./default.nix { };
+          nix-stored = pkgs.callPackage ./default.nix { version = version; };
         };
 
         devShell = pkgs.mkShell {

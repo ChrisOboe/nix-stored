@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/ChrisOboe/nix-stored/api"
 	"github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
@@ -24,6 +25,7 @@ type Settings struct {
 	ListenInterface string
 	UserRead        Authentication
 	UserWrite       Authentication
+	LogLevel        slog.Level
 }
 
 func defaultEnv(envVar string, def string) string {
@@ -66,17 +68,33 @@ func SettingsFromEnv() (Settings, error) {
 		WriteAuth.Pass = os.Getenv("NIX_STORED_USER_WRITE_PASS")
 	}
 
+	loglevel_str := os.Getenv("NIX_STORED_LOG_LEVEL")
+	var loglevel slog.Level
+	switch strings.ToUpper(loglevel_str) {
+	case "DEBUG":
+		loglevel = slog.LevelDebug
+	case "INFO":
+		loglevel = slog.LevelInfo
+	case "WARNING":
+		loglevel = slog.LevelWarn
+	case "ERROR":
+		loglevel = slog.LevelError
+	default:
+		loglevel = slog.LevelInfo
+	}
+
 	return Settings{
 		StorePath:       defaultEnv("NIX_STORED_PATH", "/var/lib/nixStored"),
 		ListenInterface: defaultEnv("NIX_STORED_LISTEN_INTERFACE", "127.0.0.1:8100"),
 		UserRead:        ReadAuth,
 		UserWrite:       WriteAuth,
+		LogLevel:        loglevel,
 	}, nil
 }
 
 func main() {
-	consoleHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
-	slog.SetDefault(slog.New(consoleHandler))
+	earlyConsoleHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+	slog.SetDefault(slog.New(earlyConsoleHandler))
 
 	s, err := SettingsFromEnv()
 	if err != nil {
@@ -84,6 +102,9 @@ func main() {
 		return
 	}
 	slog.Info("loaded settings", "settings", s)
+
+	consoleHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: s.LogLevel})
+	slog.SetDefault(slog.New(consoleHandler))
 
 	ns := NixStored{StorePath: s.StorePath}
 	// create dirs
@@ -131,6 +152,7 @@ type NixStored struct {
 // (GET /log/{deriver})
 func (n NixStored) GetDeriverBuildLog(ctx context.Context, request api.GetDeriverBuildLogRequestObject) (api.GetDeriverBuildLogResponseObject, error) {
 	// not yet implemented
+	slog.Warn("GetDeriverBuildLog was called")
 	return api.GetDeriverBuildLog501Response{}, nil
 }
 
@@ -186,6 +208,10 @@ func (n NixStored) PutNarFileHashNarCompression(ctx context.Context, request api
 	}
 	defer file.Close()
 	_, err = io.Copy(file, request.Body)
+	if err != nil {
+		slog.Error("Couln't serve request", "error", err)
+		return api.PutNarFileHashNarCompression500Response{}, nil
+	}
 
 	return api.PutNarFileHashNarCompression201Response{}, nil
 }
@@ -261,6 +287,10 @@ func (n NixStored) PutStorePathHashNarinfo(ctx context.Context, request api.PutS
 	}
 	defer file.Close()
 	_, err = io.Copy(file, request.Body)
+	if err != nil {
+		slog.Error("Couln't serve request", "error", err)
+		return api.PutStorePathHashNarinfo500Response{}, nil
+	}
 
 	return api.PutStorePathHashNarinfo201Response{}, nil
 }

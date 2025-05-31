@@ -4,10 +4,11 @@
   oapi-codegen,
   pkgs,
   stdenv,
+  version,
 }:
 buildGoModule rec {
   pname = "nix-stored";
-  version = "1.0.0";
+  inherit version;
 
   src = ./src;
   vendorHash = null;
