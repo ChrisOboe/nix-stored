@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/sync/semaphore"
+
 	"github.com/ChrisOboe/nix-stored/api"
 	"github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 )
@@ -120,7 +122,7 @@ func main() {
 	consoleHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: s.LogLevel})
 	slog.SetDefault(slog.New(consoleHandler))
 
-	ns := NixStored{StorePath: s.StorePath}
+	ns := NixStored{StorePath: s.StorePath, limit: semaphore.NewWeighted(32)}
 	// create dirs
 	err = os.MkdirAll(s.StorePath+"/nar", 0770)
 	if err != nil {
@@ -160,6 +162,7 @@ func main() {
 
 type NixStored struct {
 	StorePath string
+	limit     *semaphore.Weighted
 }
 
 // Get the build logs for a particular deriver. This path exists if this binary cache is hydrated from Hydra.
@@ -183,6 +186,8 @@ func (n NixStored) GetCompressedNar(ctx context.Context, request api.GetCompress
 			return api.GetCompressedNar500Response{}, nil
 		}
 	}
+	n.limit.Acquire(ctx, 1)
+	defer n.limit.Release(1)
 	info, err := file.Stat()
 	if err != nil {
 		slog.Error("Couldn't get fileinfo", "file", filename, "error", err)
@@ -221,6 +226,8 @@ func (n NixStored) PutNarFileHashNarCompression(ctx context.Context, request api
 		return api.PutNarFileHashNarCompression500Response{}, nil
 	}
 	defer file.Close()
+	n.limit.Acquire(ctx, 1)
+	defer n.limit.Release(1)
 	_, err = io.Copy(file, request.Body)
 	if err != nil {
 		slog.Error("Couln't serve request", "error", err)
@@ -261,6 +268,9 @@ func (n NixStored) GetNarInfo(ctx context.Context, request api.GetNarInfoRequest
 			return api.GetNarInfo500Response{}, nil
 		}
 	}
+	n.limit.Acquire(ctx, 1)
+	defer n.limit.Release(1)
+
 	info, err := file.Stat()
 	if err != nil {
 		slog.Error("Couldn't get fileinfo", "file", filename, "error", err)
@@ -300,6 +310,8 @@ func (n NixStored) PutStorePathHashNarinfo(ctx context.Context, request api.PutS
 		return api.PutStorePathHashNarinfo500Response{}, nil
 	}
 	defer file.Close()
+	n.limit.Acquire(ctx, 1)
+	defer n.limit.Release(1)
 	_, err = io.Copy(file, request.Body)
 	if err != nil {
 		slog.Error("Couln't serve request", "error", err)

@@ -12,3 +12,6 @@ github.com/google/uuid
 github.com/oapi-codegen/runtime
 github.com/oapi-codegen/runtime/strictmiddleware/nethttp
 github.com/oapi-codegen/runtime/types
+# golang.org/x/sync v0.15.0
+## explicit; go 1.23.0
+golang.org/x/sync/semaphore
