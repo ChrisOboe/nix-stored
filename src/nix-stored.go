@@ -20,6 +20,19 @@ type Authentication struct {
 	Pass string
 }
 
+func PanicHandlerMiddleware() api.StrictMiddlewareFunc {
+	return func(f nethttp.StrictHTTPHandlerFunc, operationID string) nethttp.StrictHTTPHandlerFunc {
+		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (response interface{}, err error) {
+			defer func() {
+				if rec := recover(); rec != nil {
+					slog.Error("Panic occurred", "operation", operationID, "panic", rec)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				}
+			}()
+			return f(ctx, w, r, request)
+		}
+	}
+
 type Settings struct {
 	StorePath       string
 	ListenInterface string
@@ -133,7 +146,7 @@ func main() {
 		},
 	}
 
-	apiHandler := api.NewStrictHandlerWithOptions(ns, []api.StrictMiddlewareFunc{BasicAuthMiddleware(s.UserRead, s.UserWrite), LogMiddleware()}, options)
+	apiHandler := api.NewStrictHandlerWithOptions(ns, []api.StrictMiddlewareFunc{PanicHandlerMiddleware(), BasicAuthMiddleware(s.UserRead, s.UserWrite), LogMiddleware()}, options)
 	http.Handle("/", api.Handler(apiHandler))
 
 	slog.Info("Starting http server", "interface", s.ListenInterface)
