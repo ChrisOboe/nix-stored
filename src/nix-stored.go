@@ -32,6 +32,7 @@ func PanicHandlerMiddleware() api.StrictMiddlewareFunc {
 			return f(ctx, w, r, request)
 		}
 	}
+}
 
 type Settings struct {
 	StorePath       string
